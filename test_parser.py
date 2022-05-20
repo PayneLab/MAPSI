@@ -55,22 +55,22 @@ class TestParser(unittest.TestCase):
         # POSITIVE TESTS
 
         # test mzml inputs
-        ex_file_list = mzml_file_path
+        ex_file_list = [mzml_file_path]
         expected_output_file_list = [mzml_file_path, None, None, None]
         obs_output_file_list = assign_file_types(ex_file_list)
         self.assertEqual(obs_output_file_list, expected_output_file_list)
         # test psm inputs
-        ex_file_list = mm_psm_file_path
+        ex_file_list = [mm_psm_file_path]
         expected_output_file_list = [None, mm_psm_file_path, None, None]
         obs_output_file_list = assign_file_types(ex_file_list)
         self.assertEqual(obs_output_file_list, expected_output_file_list)
         # test peptideQ inputs
-        ex_file_list = mm_peptideQ_file_path
+        ex_file_list = [mm_peptideQ_file_path]
         expected_output_file_list = [None, None, mm_peptideQ_file_path, None]
         obs_output_file_list = assign_file_types(ex_file_list)
         self.assertEqual(obs_output_file_list, expected_output_file_list)
         # test protein inputs
-        ex_file_list = mm_protein_file_path
+        ex_file_list = [mm_protein_file_path]
         expected_output_file_list = [None, None, None, mm_protein_file_path]
         obs_output_file_list = assign_file_types(ex_file_list)
         self.assertEqual(obs_output_file_list, expected_output_file_list)
@@ -89,15 +89,6 @@ class TestParser(unittest.TestCase):
         print(obs_output_file_list)
         self.assertWarns(Warning, assign_file_types, ex_file_list)
         self.assertEqual(obs_output_file_list, expected_output_file_list)
-        # too many inputs
-        ex_file_list = [mm_protein_file_path, mzml_file_path, mm_psm_file_path, mm_peptideQ_file_path, 'adhfjk']
-        self.assertRaises(Exception, assign_file_types, ex_file_list)
-        # invalid input type
-        ex_file_list = 15
-        self.assertRaises(Exception, assign_file_types, ex_file_list)
-        # too few inputs
-        ex_file_list = []
-        self.assertRaises(Exception, assign_file_types, ex_file_list)
 
     def test_generate_bool_file_list(self):
         # POSITIVE TEST
@@ -166,7 +157,7 @@ class TestParser(unittest.TestCase):
 
     # test joining functions
     def test_join_psm_and_peptideQ_dataframes(self):
-        # positive test
+        # positive test 
         psm_df = load_psm(mm_psm_file_path)
         peptideQ_df = load_peptideQ(mm_peptideQ_file_path)
         joined_columns = psm_df.columns.values.tolist()
@@ -176,6 +167,9 @@ class TestParser(unittest.TestCase):
         joined_dataframe = join_psm_and_peptideQ_dataframes(psm_df=psm_df, peptideQ_df=peptideQ_df)
         obs_columns = joined_dataframe.columns.values.tolist()
         self.assertEqual(sorted(joined_columns), sorted(obs_columns))
+    # should I test the other ones? 
+    # I'm guessing that the mzml one would be kinda because I'm not sure how to create the positive control
+
 
 
 

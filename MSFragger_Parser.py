@@ -5,6 +5,7 @@ import pyteomics.mzml
 import spectrum_utils.spectrum as sus
 from pathlib import Path
 import json
+import warnings
 
 # loading functions
 def load_mzml_df(mzml_file_path):
@@ -99,9 +100,15 @@ def load_msfragger_protein(protein_file_path):
 
 # joining functions
 def join_peptideQ_and_protein_dataframes(protein_df, peptideQ_df):
+
+    duplicate_columns = []
+    for column in protein_df.columns:
+        if column in peptideQ_df.columns and column != 'Protein Accession' and 'Spectral Count' not in column:
+            duplicate_columns.append(column)
+        
+    peptideQ_df = peptideQ_df.drop(columns=duplicate_columns)
     # join based on the "Protein Accession"
-    joined_dataframe = peptideQ_df.merge(right=protein_df, on="Protein Accession", how='inner', suffixes=('_protein', '_peptide'))
-    
+    joined_dataframe = peptideQ_df.merge(right=protein_df, on="Protein Accession", how='inner', suffixes=('_peptide', '_protein'))
     return joined_dataframe
 def join_psm_and_peptideQ_dataframes(psm_df, peptideQ_df):
     # find all the duplicate columns that are not the 'Peptide'
@@ -209,9 +216,6 @@ def mzml_psm_and_peptideQ_controller(mzml_file_path, psm_file_path, peptideQ_fil
         merged_df = merged_df.drop_duplicates(subset=["Scan Number"], keep="first")
         merged_df = merged_df.rename({'Peptide_x' : 'Peptide', 'Protein Accession_x': 'Protein Accession'}, axis=1)
         merged_df = merged_df.drop(columns=['Peptide_y', 'Protein Accession_y'])
-
-    print (merged_df.columns)
-    merged_df = merged_df.set_index(['File Name', 'Protein Accession', 'Peptide', 'Scan Number'])
     
     # select all columns to keep, if this parameter was not passed in, return dataframe with all columns
     if columns_to_keep != None:
@@ -247,6 +251,17 @@ def master_df_controller(mzml_file_path, psm_file_path, peptideQ_file_path, prot
 
 # general parsing helper functions
 def assign_file_types(input_files):
+    # check type(input_files)
+    if type(input_files) != list and type(input_files) != str and type(input_files) != path:
+        raise Exception("input_files must be a list or a str.")
+    # check that the number of file inputs is between 1 and 4
+    if type(input_files) == list and (len(input_files) < 1 or len(input_files) > 4):
+        raise Exception("input_files can only contain 1-4 files.")
+
+    # if only one file was inputted, place it into a list
+    if type(input_files) == str:
+        input_files = [input_files]
+
 
     file_path_list = [None, None, None, None]
 
@@ -263,7 +278,7 @@ def assign_file_types(input_files):
         else:
             # most of the mzML files do not contain the word 'mzml'
             file_path_list[0] = file_path
-    
+            warnings.warn(f"Function could not identify {file_name}. Function will assume that this is an mzML file. If this is not the correct file assignment, please rename your file to contain the file type. Ex: mzml, psm, peptide/pep, protein/prot")
     return file_path_list
 def generate_bool_file_list(interpreted_file_list):
     bool_file_list = []
@@ -299,7 +314,7 @@ def load_call_dictionary(interpreted_file_list, columns_to_keep):
     ['Protein Accession','Peptide', 'Scan Number']]
 
     # load and merge all 3 dataframes
-    call_dictionary['1,1,1,1'] = [master_df_controller, [interpreted_file_list[0],interpreted_file_list[1], interpreted_file_list[2], interpreted_file_list[3],columns_to_keep],
+    call_dictionary['[1,1,1,1]'] = [master_df_controller, [interpreted_file_list[0],interpreted_file_list[1], interpreted_file_list[2], interpreted_file_list[3],columns_to_keep],
     ['Protein Accession','Peptide', 'Scan Number']]
 
     return call_dictionary
@@ -346,6 +361,7 @@ def parse_files(input_files, output_file_path, columns_to_keep=None, multiIndex=
     # check that the input_files contained a valid list of files
     bool_file_list = generate_bool_file_list(interpreted_file_list)
     call_dictionary = load_call_dictionary(interpreted_file_list, columns_to_keep)
+    
     if bool_file_list not in call_dictionary.keys():
         print("Invalid file combination")
         return False
@@ -368,9 +384,9 @@ def parse_files(input_files, output_file_path, columns_to_keep=None, multiIndex=
     if peptides_to_keep != None:
         user_dataframe = user_dataframe.loc[user_dataframe['Peptide'].isin(peptides_to_keep)]
     
+    save_df(joined_dataframe=user_dataframe, file_path=output_file_path)
+    
     # multiIndexing
     user_dataframe = select_multiIndex(user_dataframe=user_dataframe, multiIndex=multiIndex, default_multiIndex=default_multiIndex)
-    
-    save_df(joined_dataframe=user_dataframe, file_path=output_file_path)
 
     return user_dataframe
