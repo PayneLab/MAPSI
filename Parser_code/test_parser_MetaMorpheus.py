@@ -1,4 +1,6 @@
 import unittest
+
+from matplotlib.pyplot import sca
 from MetaMorpheus_Parser import *
 
 # mzML file
@@ -8,7 +10,7 @@ mzml_file_path = "C:\\Users\\Sarah Curtis\\OneDrive - BYU\\Documents\\Single Cel
 mm_psm_file_path = "C:\\Users\\Sarah Curtis\\OneDrive - BYU\\Documents\\Single Cell Team Documents\\API_dev\\MetaM\\2ng\\Ex_Auto_J3_30umTB_2ngQC_60m_1-calib_PSMs.psmtsv"
 mm_peptideQ_file_path = "C:\\Users\\Sarah Curtis\\OneDrive - BYU\\Documents\\Single Cell Team Documents\\API_dev\\MetaM\\2ng\\AllQuantifiedPeptides.tsv"
 mm_protein_file_path = "C:\\Users\\Sarah Curtis\\OneDrive - BYU\\Documents\\Single Cell Team Documents\\API_dev\\MetaM\\2ng\\AllQuantifiedProteinGroups.tsv"
-
+outfile = "C:\\Users\\Sarah Curtis\\OneDrive - BYU\\Documents\\Single Cell Team Documents\\API_dev\\MetaM\\2ng\\MMtester.tsv"
 class TestParser(unittest.TestCase):
 
     # test loaders
@@ -50,6 +52,26 @@ class TestParser(unittest.TestCase):
         self.assertEqual(obs_columns, expected_columns)
 
     # test parser helper functions
+
+    def test_check_user_inputs(self):
+        # NEGATIVE TESTS
+        # test that it will user inputs that are not the right dtype
+        with self.assertRaises(Exception):
+            check_user_inputs(input_files=45, output_file_path=outfile, columns_to_keep=None, multiIndex=None, proteins_to_keep=None, peptides_to_keep=None, scans_to_keep=None)
+        with self.assertRaises(Exception):
+            check_user_inputs(input_files=mm_peptideQ_file_path, output_file_path=45, columns_to_keep=None, multiIndex=None, proteins_to_keep=None, peptides_to_keep=None, scans_to_keep=None)
+        with self.assertRaises(Exception):
+            check_user_inputs(input_files=mm_peptideQ_file_path, output_file_path=outfile, columns_to_keep=45, multiIndex=None, proteins_to_keep=None, peptides_to_keep=None, scans_to_keep=None)
+        
+        # POSITIVE TESTS
+        # test that it will not raise an exception with correct file types
+        try:
+            check_user_inputs(input_files=mm_peptideQ_file_path, output_file_path=outfile, columns_to_keep="Peptide", multiIndex="Peptide", proteins_to_keep="Q25364", peptides_to_keep="AAAGGGCC", scans_to_keep="54263")
+        except Exception:
+            self.fail(f"{check_user_inputs} raised an Exception unexpectedly!")
+        # test that it will convert a str into a list if it was inputted as such
+        input_files, output_file_path, columns_to_keep, multiIndex, proteins_to_keep, peptides_to_keep, scans_to_keep = check_user_inputs(input_files=mm_peptideQ_file_path, output_file_path=outfile, columns_to_keep=None, multiIndex=None, proteins_to_keep=None, peptides_to_keep=None, scans_to_keep=None)
+        self.assertTrue(type(input_files) == list, "check_input_files did not convert the input_files from a str into a list")
 
     def test_assign_file_types(self):
         # POSITIVE TESTS
@@ -129,6 +151,21 @@ class TestParser(unittest.TestCase):
         expected_columns = str(psm_df.columns.values.tolist())
         obs_columns = str(mod_psm_df.columns.values.tolist())
         self.assertEqual(obs_columns, expected_columns)
+
+    def test_select_rows_to_keep(self):
+        # NEGATIVE TESTS
+        # check that the function checks that the correct ___to_keep is selected for the dataframe
+        protein_df = load_protein(mm_protein_file_path)
+        scans_to_keep = ['6000', '5000']
+        mod_protein_df = select_rows_to_keep(user_dataframe=protein_df, proteins_to_keep=None, peptides_to_keep=None, scans_to_keep=scans_to_keep)
+        self.assertEqual(len(protein_df), len(mod_protein_df))
+        # check that the function will return the entire dataframe if an element of a 
+        # rows_to_keep parameter was not found
+        psm_df = load_protein(mm_psm_file_path)
+        proteins_to_keep = ['60000000', '500000000000000']
+        peptides_to_keep = ['60000000', '500000000000000']
+        mod_psm_df = select_rows_to_keep(user_dataframe=psm_df, proteins_to_keep=proteins_to_keep, peptides_to_keep=peptides_to_keep, scans_to_keep=None)
+        self.assertEqual(len(psm_df), len(mod_psm_df))
 
     def test_select_multiIndex(self):
         # POSITIVE TESTS

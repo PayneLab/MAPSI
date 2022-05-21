@@ -1,4 +1,3 @@
-
 from importlib.resources import path
 from logging import warning
 import pandas as pd
@@ -336,28 +335,63 @@ def select_rows_to_keep(user_dataframe, proteins_to_keep, peptides_to_keep, scan
         # check that the 'Protein Accession' column exists
         selected_column = 'Protein Accession'
         if selected_column in user_dataframe.columns:
-            user_dataframe = user_dataframe.loc[user_dataframe[selected_column].isin(proteins_to_keep)]
+            # check that the all the proteins in proteins_to_keep exist
+            protein_values = user_dataframe[selected_column].values
+            mistake = False
+            missing_values = []
+            for protein in proteins_to_keep:
+                if protein not in protein_values:
+                    mistake = True
+                    missing_values.append(protein)
+            if mistake:
+                print(f"The following proteins were not found in the dataframe: {missing_values}")
+                print(f"To ensure that you have all the information needed, the dataframe will not be filted by {selected_column}")
+            else:
+                user_dataframe = user_dataframe.loc[user_dataframe[selected_column].isin(proteins_to_keep)]
         else:
-            print(f"{selected_column} not found.")
+            print(f"{selected_column} column not found.")
 
     if peptides_to_keep != None:
         # check that the 'Peptide' column exists
         selected_column = 'Peptide'
         if selected_column in user_dataframe.columns:
-            user_dataframe = user_dataframe.loc[user_dataframe[selected_column].isin(peptides_to_keep)]
+            # check that the all the proteins in proteins_to_keep exist
+            peptide_values = user_dataframe[selected_column].values
+            mistake = False
+            missing_values = []
+            for peptide in peptides_to_keep:
+                if peptide not in peptide_values:
+                    mistake = True
+                    missing_values.append(peptide)
+            if mistake:
+                print(f"The following peptides were not found in the dataframe: {missing_values}")
+                print(f"To ensure that you have all the information needed, the dataframe will not be filted by {selected_column}")
+            else:
+                user_dataframe = user_dataframe.loc[user_dataframe[selected_column].isin(peptides_to_keep)]
         else:
-            print(f"{selected_column} not found.")
+            print(f"{selected_column} column not found.")
     
     if scans_to_keep != None:
         selected_column = 'Scan Number'
         if selected_column in user_dataframe.columns:
             # make sure the selected_columns is in numeric form
             for index, scan in enumerate(scans_to_keep):
-                print(scan)
                 scans_to_keep[index] = int(scan)
-            user_dataframe = user_dataframe.loc[user_dataframe[selected_column].isin(scans_to_keep)]
+            # check that all of the specified scan numbers exist in the dataframe
+            scan_values = user_dataframe[selected_column].values
+            mistake = False
+            missing_values = []
+            for scan in scans_to_keep:
+                if scan not in scan_values:
+                    mistake = True
+                    missing_values.append(scan)
+            if mistake:
+                print(f"The following scans were not found in the dataframe: {missing_values}")
+                print(f"To ensure that you have all the information needed, the dataframe will not be filted by {selected_column}")
+            else:
+                user_dataframe = user_dataframe.loc[user_dataframe[selected_column].isin(scans_to_keep)]
         else:
-            print(f"{selected_column} not found.")
+            print(f"{selected_column} column not found.")
     
     return user_dataframe
 def check_user_inputs(input_files, output_file_path, columns_to_keep, multiIndex, proteins_to_keep, peptides_to_keep, scans_to_keep):
