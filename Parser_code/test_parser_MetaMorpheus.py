@@ -16,9 +16,16 @@ class TestParser(unittest.TestCase):
     # test loaders
 
     def test_load_mzml_df(self):
-        # add this one last
-        pass
-
+        # test that the newly added and deleted columns have been modified correctly
+        columns_that_should_not_exist = ["spectrum title", "count", "positive scan", "centroid spectrum", "defaultArrayLength", "MSn spectrum", "dataProcessingRef", "scanList", "MS1 spectrum", "ms level", "precursorList"]
+        columns_that_should_exist = ['m/z array', 'intensity array']
+        mzml_df = load_mzml_df(mzml_file_path)
+        for column in columns_that_should_not_exist:
+            self.assertFalse(column in mzml_df.columns.tolist())
+        for column in columns_that_should_exist:
+            print(column)
+            self.assertTrue(column in mzml_df.columns.tolist())
+    
     def test_load_psm(self):
         # POSITIVE TEST
         # note that the file types are checked before this function is called so only a positive test is needed
@@ -161,11 +168,23 @@ class TestParser(unittest.TestCase):
         self.assertEqual(len(protein_df), len(mod_protein_df))
         # check that the function will return the entire dataframe if an element of a 
         # rows_to_keep parameter was not found
-        psm_df = load_protein(mm_psm_file_path)
+        psm_df = load_psm(mm_psm_file_path)
         proteins_to_keep = ['60000000', '500000000000000']
         peptides_to_keep = ['60000000', '500000000000000']
         mod_psm_df = select_rows_to_keep(user_dataframe=psm_df, proteins_to_keep=proteins_to_keep, peptides_to_keep=peptides_to_keep, scans_to_keep=None)
         self.assertEqual(len(psm_df), len(mod_psm_df))
+        # POSITIVE TESTS
+        # check that the function recognizes all of the instances where the value in ___to_keep is found
+        # in the given column
+        peptideQ_df = load_peptideQ(mm_peptideQ_file_path)
+        proteins_to_keep = ['Q99453', 'P37108']
+        mod_peptideQ_df = select_rows_to_keep(user_dataframe=peptideQ_df, proteins_to_keep=proteins_to_keep, peptides_to_keep=None, scans_to_keep=None)
+        expected_num_rows = 0
+        protein_accessions = peptideQ_df['Protein Accession'].tolist()
+        for protein in proteins_to_keep:
+            if protein in protein_accessions:
+                expected_num_rows += protein_accessions.count(protein)
+        self.assertEqual(len(mod_peptideQ_df), expected_num_rows)
 
     def test_select_multiIndex(self):
         # POSITIVE TESTS
@@ -194,7 +213,7 @@ class TestParser(unittest.TestCase):
 
     # test joining functions
     def test_join_psm_and_peptideQ_dataframes(self):
-        # positive test 
+        # POSITIVE TESTS 
         psm_df = load_psm(mm_psm_file_path)
         peptideQ_df = load_peptideQ(mm_peptideQ_file_path)
         joined_columns = psm_df.columns.values.tolist()
@@ -204,12 +223,39 @@ class TestParser(unittest.TestCase):
         joined_dataframe = join_psm_and_peptideQ_dataframes(psm_df=psm_df, peptideQ_df=peptideQ_df)
         obs_columns = joined_dataframe.columns.values.tolist()
         self.assertEqual(sorted(joined_columns), sorted(obs_columns))
-    # should I test the other ones? 
-    # I'm guessing that the mzml one would be kinda because I'm not sure how to create the positive control
-
-
-
-
+        # test that the number of rows looks right
+        psm_peptides = psm_df['Peptide'].values.tolist()
+        peptideQ_peptides = peptideQ_df['Peptide'].values.tolist()
+        num_of_overlaps = 0
+        for peptide in psm_peptides:
+            if peptide in peptideQ_peptides:
+                num_of_overlaps += 1
+        self.assertEqual(len(joined_dataframe), num_of_overlaps)
+    
+    def test_join_peptideQ_and_protein_dataframes(self):
+        # POSITIVE TESTS 
+        # test that the right number of duplicate columns are there
+        peptideQ_df = load_peptideQ(mm_peptideQ_file_path)
+        protein_df = load_protein(mm_protein_file_path)
+        joined_dataframe = join_peptideQ_and_protein_dataframes(protein_df=protein_df, peptideQ_df=peptideQ_df)
+        obs_columns = joined_dataframe.columns.tolist()
+        obs_duplicates = 0
+        for column in obs_columns:
+            if "_peptide" in column or "_protein" in column:
+                obs_duplicates += 1
+        expected_num_duplicates = 0
+        for column in peptideQ_df.columns.tolist():
+            if column in protein_df and column != "Protein Accession":
+                expected_num_duplicates += 2
+        self.assertEqual(expected_num_duplicates, obs_duplicates)
+        # test that there are the right number of rows
+        peptideQ_protein_accessions = peptideQ_df['Protein Accession'].values.tolist()
+        protein_protein_accessions = protein_df['Protein Accession'].values.tolist()
+        num_of_overlaps = 0
+        for protein_accession in peptideQ_protein_accessions:
+            if protein_accession in protein_protein_accessions:
+                num_of_overlaps += 1
+        self.assertEqual(len(joined_dataframe), num_of_overlaps)
 
 if __name__ == '__main__':
     unittest.main()

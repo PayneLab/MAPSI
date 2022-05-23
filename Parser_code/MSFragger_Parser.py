@@ -103,7 +103,7 @@ def join_peptideQ_and_protein_dataframes(protein_df, peptideQ_df):
 
     duplicate_columns = []
     for column in protein_df.columns:
-        if column in peptideQ_df.columns and column != 'Protein Accession' and 'Spectral Count' not in column:
+        if (column in peptideQ_df.columns) and (column != 'Protein Accession') and ('Spectral Count' not in column):
             duplicate_columns.append(column)
         
     peptideQ_df = peptideQ_df.drop(columns=duplicate_columns)
@@ -251,34 +251,24 @@ def master_df_controller(mzml_file_path, psm_file_path, peptideQ_file_path, prot
 
 # general parsing helper functions
 def assign_file_types(input_files):
-    # check type(input_files)
-    if type(input_files) != list and type(input_files) != str and type(input_files) != path:
-        raise Exception("input_files must be a list or a str.")
-    # check that the number of file inputs is between 1 and 4
-    if type(input_files) == list and (len(input_files) < 1 or len(input_files) > 4):
-        raise Exception("input_files can only contain 1-4 files.")
-
-    # if only one file was inputted, place it into a list
-    if type(input_files) == str:
-        input_files = [input_files]
-
 
     file_path_list = [None, None, None, None]
 
     for index, file_path in enumerate(input_files):
-        file_name = os.path.basename(file_path).lower()
+        file_name, file_extension = os.path.splitext(file_path).lower()
         if 'protein' in file_name or 'prot' in file_name:
             file_path_list[3] = file_path
         elif 'peptide' in file_name or 'pep' in file_name:
             file_path_list[2] = file_path
         elif 'psm' in file_name:
             file_path_list[1] = file_path
-        elif 'mzml' in file_path:
+        elif 'mzml' in file_extension:
             file_path_list[0] = file_path
         else:
             # most of the mzML files do not contain the word 'mzml'
             file_path_list[0] = file_path
             warnings.warn(f"Function could not identify {file_name}. Function will assume that this is an mzML file. If this is not the correct file assignment, please rename your file to contain the file type. Ex: mzml, psm, peptide/pep, protein/prot")
+    
     return file_path_list
 def generate_bool_file_list(interpreted_file_list):
     bool_file_list = []
@@ -350,10 +340,113 @@ def select_multiIndex(user_dataframe, multiIndex, default_multiIndex):
 def save_df(joined_dataframe, file_path):
     joined_dataframe.to_csv(file_path, sep="\t", index=False)
     print(f'Dataframe saved.')
+def select_rows_to_keep(user_dataframe, proteins_to_keep, peptides_to_keep, scans_to_keep):
+    if proteins_to_keep != None:
+        # check that the 'Protein Accession' column exists
+        selected_column = 'Protein Accession'
+        if selected_column in user_dataframe.columns:
+            # check that the all the proteins in proteins_to_keep exist
+            protein_values = user_dataframe[selected_column].values
+            mistake = False
+            missing_values = []
+            for protein in proteins_to_keep:
+                if protein not in protein_values:
+                    mistake = True
+                    missing_values.append(protein)
+            if mistake:
+                print(f"The following proteins were not found in the dataframe: {missing_values}")
+                print(f"To ensure that you have all the information needed, the dataframe will not be filted by {selected_column}")
+            else:
+                user_dataframe = user_dataframe.loc[user_dataframe[selected_column].isin(proteins_to_keep)]
+        else:
+            print(f"{selected_column} column not found.")
+
+    if peptides_to_keep != None:
+        # check that the 'Peptide' column exists
+        selected_column = 'Peptide'
+        if selected_column in user_dataframe.columns:
+            # check that the all the proteins in proteins_to_keep exist
+            peptide_values = user_dataframe[selected_column].values
+            mistake = False
+            missing_values = []
+            for peptide in peptides_to_keep:
+                if peptide not in peptide_values:
+                    mistake = True
+                    missing_values.append(peptide)
+            if mistake:
+                print(f"The following peptides were not found in the dataframe: {missing_values}")
+                print(f"To ensure that you have all the information needed, the dataframe will not be filted by {selected_column}")
+            else:
+                user_dataframe = user_dataframe.loc[user_dataframe[selected_column].isin(peptides_to_keep)]
+        else:
+            print(f"{selected_column} column not found.")
+    
+    if scans_to_keep != None:
+        selected_column = 'Scan Number'
+        if selected_column in user_dataframe.columns:
+            # make sure the selected_columns is in numeric form
+            for index, scan in enumerate(scans_to_keep):
+                scans_to_keep[index] = int(scan)
+            # check that all of the specified scan numbers exist in the dataframe
+            scan_values = user_dataframe[selected_column].values
+            mistake = False
+            missing_values = []
+            for scan in scans_to_keep:
+                if scan not in scan_values:
+                    mistake = True
+                    missing_values.append(scan)
+            if mistake:
+                print(f"The following scans were not found in the dataframe: {missing_values}")
+                print(f"To ensure that you have all the information needed, the dataframe will not be filted by {selected_column}")
+            else:
+                user_dataframe = user_dataframe.loc[user_dataframe[selected_column].isin(scans_to_keep)]
+        else:
+            print(f"{selected_column} column not found.")
+    
+    return user_dataframe
+def check_user_inputs(input_files, output_file_path, columns_to_keep, multiIndex, proteins_to_keep, peptides_to_keep, scans_to_keep):
+    # check the input files
+    print(type(input_files))
+    # check type(input_files)
+    if not isinstance(input_files, (str, list, Path)):
+        raise Exception("input_files must be a list or a str.")
+    # check that the number of file inputs is between 1 and 4
+    if type(input_files) == list and (len(input_files) < 1 or len(input_files) > 4):
+        raise Exception("input_files can only contain 1-4 files.")
+    # if only one file was inputted, place it into a list
+    if type(input_files) == str:
+        print("converting string into list")
+        input_files = [input_files]
+
+    # check output_file_path
+    if not isinstance(output_file_path, (str, Path)):
+        raise Exception("output_file_path must be a str or Path obj")
+    
+    # check inputted lists
+    parameter_names = ['columns_to_keep', 'multiIndex', 'proteins_to_keep', 'peptides_to_keep', 'scans_to_keep']
+    user_inputted_lists = [columns_to_keep, multiIndex, proteins_to_keep, peptides_to_keep, scans_to_keep]
+    for index, user_list in enumerate(user_inputted_lists):
+        if user_list != None:
+            # check file type
+            if not isinstance(user_list, (str, list)):
+                raise Exception(f"{parameter_names[index]} must be a list or a str.")
+            elif type(user_list) == str:
+                user_inputted_lists[index] = [user_list]
+            else:
+                # if it is a list, check that it is a list of strings
+                for element in user_list:
+                    if type(element) != str:
+                        raise Exception(f"{parameter_names[index]} must be a string or a list of strings.")
+    
+    master_parameter_list = [input_files, output_file_path]
+    master_parameter_list = master_parameter_list + user_inputted_lists
+    print(f"Your inputs: {master_parameter_list}")
+    return master_parameter_list
 
 # msfragger parser
-def parse_files(input_files, output_file_path, columns_to_keep=None, multiIndex=None, proteins_to_keep=None, peptides_to_keep=None):
-    # check rows_to_keep parameter
+def parse_files(input_files, output_file_path, columns_to_keep=None, multiIndex=None, proteins_to_keep=None, peptides_to_keep=None, scans_to_keep=None):
+    # check user inputs
+    input_files, output_file_path, columns_to_keep, multiIndex, proteins_to_keep, peptides_to_keep, scans_to_keep = check_user_inputs(input_files, output_file_path, columns_to_keep, multiIndex, proteins_to_keep, peptides_to_keep, scans_to_keep)
     
     # interpret the file list
     interpreted_file_list = assign_file_types(input_files)
@@ -361,7 +454,6 @@ def parse_files(input_files, output_file_path, columns_to_keep=None, multiIndex=
     # check that the input_files contained a valid list of files
     bool_file_list = generate_bool_file_list(interpreted_file_list)
     call_dictionary = load_call_dictionary(interpreted_file_list, columns_to_keep)
-    
     if bool_file_list not in call_dictionary.keys():
         print("Invalid file combination")
         return False
@@ -376,17 +468,13 @@ def parse_files(input_files, output_file_path, columns_to_keep=None, multiIndex=
     # columns to keep
     user_dataframe = select_columns_to_keep(user_dataframe=user_dataframe, columns_to_keep=columns_to_keep)
 
-    # proteins to keep
-    if proteins_to_keep != None:
-        user_dataframe = user_dataframe.loc[user_dataframe['Protein Accession'].isin(proteins_to_keep)]
-
-    # peptides to keep
-    if peptides_to_keep != None:
-        user_dataframe = user_dataframe.loc[user_dataframe['Peptide'].isin(peptides_to_keep)]
+    # rows to keep
+    user_dataframe = select_rows_to_keep(user_dataframe, proteins_to_keep, peptides_to_keep, scans_to_keep)
     
     save_df(joined_dataframe=user_dataframe, file_path=output_file_path)
-    
+
     # multiIndexing
     user_dataframe = select_multiIndex(user_dataframe=user_dataframe, multiIndex=multiIndex, default_multiIndex=default_multiIndex)
-
+    user_dataframe = user_dataframe.sort_index()
+    
     return user_dataframe
