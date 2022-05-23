@@ -113,11 +113,8 @@ class TestParser(unittest.TestCase):
 
         # test no valid inputs 
         ex_file_list = ['asfkjl']
-        expected_output_file_list = ['asfkjl', None, None, None]
-        obs_output_file_list = assign_file_types(ex_file_list)
-        print(obs_output_file_list)
-        self.assertWarns(Warning, assign_file_types, ex_file_list)
-        self.assertEqual(obs_output_file_list, expected_output_file_list)
+        with self.assertRaises(Exception):
+            assign_file_types(ex_file_list)
 
     def test_generate_bool_file_list(self):
         # POSITIVE TEST

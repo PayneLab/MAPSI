@@ -432,7 +432,7 @@ def check_user_inputs(input_files, output_file_path, columns_to_keep, multiIndex
     return master_parameter_list
 
 # metamorpheus parser
-def parse_files(input_files, output_file_path, columns_to_keep=None, multiIndex=None, proteins_to_keep=None, peptides_to_keep=None, scans_to_keep=None):
+def parse_files(input_files, output_file_path=None, columns_to_keep=None, multiIndex=None, proteins_to_keep=None, peptides_to_keep=None, scans_to_keep=None):
     # check user inputs
     input_files, output_file_path, columns_to_keep, multiIndex, proteins_to_keep, peptides_to_keep, scans_to_keep = check_user_inputs(input_files, output_file_path, columns_to_keep, multiIndex, proteins_to_keep, peptides_to_keep, scans_to_keep)
     
@@ -459,7 +459,8 @@ def parse_files(input_files, output_file_path, columns_to_keep=None, multiIndex=
     # rows to keep
     user_dataframe = select_rows_to_keep(user_dataframe, proteins_to_keep, peptides_to_keep, scans_to_keep)
     
-    save_df(joined_dataframe=user_dataframe, file_path=output_file_path)
+    if output_file_path != None:
+        save_df(joined_dataframe=user_dataframe, file_path=output_file_path)
 
     # multiIndexing
     user_dataframe = select_multiIndex(user_dataframe=user_dataframe, multiIndex=multiIndex, default_multiIndex=default_multiIndex)

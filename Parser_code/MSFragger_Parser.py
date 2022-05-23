@@ -255,7 +255,9 @@ def assign_file_types(input_files):
     file_path_list = [None, None, None, None]
 
     for index, file_path in enumerate(input_files):
-        file_name, file_extension = os.path.splitext(file_path).lower()
+        file_name, file_extension = os.path.splitext(file_path)
+        file_name = file_name.lower()
+        file_extension = file_extension.lower()
         if 'protein' in file_name or 'prot' in file_name:
             file_path_list[3] = file_path
         elif 'peptide' in file_name or 'pep' in file_name:
@@ -265,9 +267,7 @@ def assign_file_types(input_files):
         elif 'mzml' in file_extension:
             file_path_list[0] = file_path
         else:
-            # most of the mzML files do not contain the word 'mzml'
-            file_path_list[0] = file_path
-            warnings.warn(f"Function could not identify {file_name}. Function will assume that this is an mzML file. If this is not the correct file assignment, please rename your file to contain the file type. Ex: mzml, psm, peptide/pep, protein/prot")
+            raise Exception(f"Function could not identify {file_name}. Please rename your file to contain the file type. Ex: .mzml, psm, peptide/pep, protein/prot")
     
     return file_path_list
 def generate_bool_file_list(interpreted_file_list):
@@ -405,8 +405,6 @@ def select_rows_to_keep(user_dataframe, proteins_to_keep, peptides_to_keep, scan
     
     return user_dataframe
 def check_user_inputs(input_files, output_file_path, columns_to_keep, multiIndex, proteins_to_keep, peptides_to_keep, scans_to_keep):
-    # check the input files
-    print(type(input_files))
     # check type(input_files)
     if not isinstance(input_files, (str, list, Path)):
         raise Exception("input_files must be a list or a str.")
@@ -415,7 +413,7 @@ def check_user_inputs(input_files, output_file_path, columns_to_keep, multiIndex
         raise Exception("input_files can only contain 1-4 files.")
     # if only one file was inputted, place it into a list
     if type(input_files) == str:
-        print("converting string into list")
+        print("converting input_files from a string into list")
         input_files = [input_files]
 
     # check output_file_path
@@ -444,7 +442,7 @@ def check_user_inputs(input_files, output_file_path, columns_to_keep, multiIndex
     return master_parameter_list
 
 # msfragger parser
-def parse_files(input_files, output_file_path, columns_to_keep=None, multiIndex=None, proteins_to_keep=None, peptides_to_keep=None, scans_to_keep=None):
+def parse_files(input_files, output_file_path=None, columns_to_keep=None, multiIndex=None, proteins_to_keep=None, peptides_to_keep=None, scans_to_keep=None):
     # check user inputs
     input_files, output_file_path, columns_to_keep, multiIndex, proteins_to_keep, peptides_to_keep, scans_to_keep = check_user_inputs(input_files, output_file_path, columns_to_keep, multiIndex, proteins_to_keep, peptides_to_keep, scans_to_keep)
     
@@ -471,7 +469,8 @@ def parse_files(input_files, output_file_path, columns_to_keep=None, multiIndex=
     # rows to keep
     user_dataframe = select_rows_to_keep(user_dataframe, proteins_to_keep, peptides_to_keep, scans_to_keep)
     
-    save_df(joined_dataframe=user_dataframe, file_path=output_file_path)
+    if output_file_path != None:
+        save_df(joined_dataframe=user_dataframe, file_path=output_file_path)
 
     # multiIndexing
     user_dataframe = select_multiIndex(user_dataframe=user_dataframe, multiIndex=multiIndex, default_multiIndex=default_multiIndex)
