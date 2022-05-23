@@ -16,7 +16,16 @@ class TestParser(unittest.TestCase):
 
     # test loaders
 
-    
+    def test_load_mzml_df(self):
+        # test that the newly added and deleted columns have been modified correctly
+        columns_that_should_not_exist = ["spectrum title", "count", "positive scan", "centroid spectrum", "defaultArrayLength", "MSn spectrum", "dataProcessingRef", "scanList", "MS1 spectrum", "ms level", "precursorList"]
+        columns_that_should_exist = ['m/z array', 'intensity array']
+        mzml_df = load_mzml_df(mzml_file_path)
+        for column in columns_that_should_not_exist:
+            self.assertFalse(column in mzml_df.columns.tolist())
+        for column in columns_that_should_exist:
+            print(column)
+            self.assertTrue(column in mzml_df.columns.tolist())
 
     def test_load_psm_df_msfragger(self):
         # POSITIVE TEST
@@ -110,7 +119,6 @@ class TestParser(unittest.TestCase):
         ex_file_list = ['asfkjl']
         with self.assertRaises(Exception):
             assign_file_types(ex_file_list)
-        self.assertEqual(obs_output_file_list, expected_output_file_list)
 
     def test_generate_bool_file_list(self):
         # POSITIVE TEST

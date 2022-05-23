@@ -255,10 +255,7 @@ def assign_file_types(input_files):
         elif 'mzml' in file_path:
             file_path_list[0] = file_path
         else:
-            # most of the mzML files do not contain the word 'mzml'
-            file_path_list[0] = file_path
-            warnings.warn(f"Function could not identify {file_name}. Function will assume that this is an mzML file. If this is not the correct file assignment, please rename your file to contain the file type. Ex: mzml, psm, peptide/pep, protein/prot")
-    
+            raise Exception(f"Function could not identify {file_name}. Please rename your file to contain the file type. Ex: .mzml, psm, peptide/pep, protein/prot")
     return file_path_list
 def generate_bool_file_list(interpreted_file_list):
     bool_file_list = []
