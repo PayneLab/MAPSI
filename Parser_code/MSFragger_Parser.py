@@ -439,6 +439,21 @@ def check_user_inputs(input_files, output_file_path, columns_to_keep, multiIndex
 
 # msfragger parser
 def parse_files(input_files, output_file_path=None, columns_to_keep=None, multiIndex=None, proteins_to_keep=None, peptides_to_keep=None, scans_to_keep=None):
+    '''
+        Parameters:
+        * input_files (str or list of str): file_paths of files to run
+        * output_file_path (str, optional): file_path to where you would like to save the generated dataframe
+        * columns_to_keep (str or list of str, optional): Name(s) of columns to include in the dataframe. Default of None will select entire dataframe.
+        * multiIndex (str or list of str, optional): Name(s) of columns to use as the index/multiIndex. Default of None will use a default multiIndex.
+        * proteins_to_keep (str or list of str, optional): Protein Accession(s) to include in the dataframe. Default of None will select all proteins.
+        * peptides_to_keep (str or list of str, optional): Peptide sequence(s) to include in the dataframe. Default of None will select all peptides.
+        * scans_to_keep (str or list of str, optional): Scan number(s) to include in the dataframe. Default of None will select all scan numbers.
+
+    Returns: 
+        * pandas.Dataframe: A merged dataframe with all of the data contained in the input file(s)
+
+    '''
+    
     # check user inputs
     input_files, output_file_path, columns_to_keep, multiIndex, proteins_to_keep, peptides_to_keep, scans_to_keep = check_user_inputs(input_files, output_file_path, columns_to_keep, multiIndex, proteins_to_keep, peptides_to_keep, scans_to_keep)
     
