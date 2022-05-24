@@ -418,7 +418,7 @@ def check_user_inputs(input_files, output_file_path, columns_to_keep, multiIndex
 
     # check output_file_path
     if output_file_path != None and not isinstance(output_file_path, (str, Path)):
-        raise Exception("output_file_path must be a str or Path obj")
+        raise Exception("output_file_path must be a str or Path obj hmmm")
     
     # check inputted lists
     parameter_names = ['columns_to_keep', 'multiIndex', 'proteins_to_keep', 'peptides_to_keep', 'scans_to_keep']
@@ -438,7 +438,6 @@ def check_user_inputs(input_files, output_file_path, columns_to_keep, multiIndex
     
     master_parameter_list = [input_files, output_file_path]
     master_parameter_list = master_parameter_list + user_inputted_lists
-    print(f"Your inputs: {master_parameter_list}")
     return master_parameter_list
 
 # msfragger parser
