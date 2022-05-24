@@ -58,9 +58,6 @@ def load_mzml_df(mzml_file_path):
     # drop the "precursor info" column because we don't need it anymore
     complete_mzml_df = complete_mzml_df.drop(columns=['precursor info'])
 
-    # as the scan number is the index we care about, we will use it as our index in the dataframe
-    complete_mzml_df= complete_mzml_df.set_index("Scan Number")
-
     return complete_mzml_df 
 def load_psm(psm_file_path):
     # read the psm file into a pandas dataframe
