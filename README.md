@@ -1,2 +1,2 @@
-# MAPSIN
-Mzml And Processed Spectra INterface
+# MAPSI
+Mzml And Processed Spectra Interface
