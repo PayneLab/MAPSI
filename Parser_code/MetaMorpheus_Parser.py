@@ -245,17 +245,22 @@ def assign_file_types(input_files):
     file_path_list = [None, None, None, None]
 
     for index, file_path in enumerate(input_files):
-        file_name = os.path.basename(file_path).lower()
+        file_name, file_extension = os.path.splitext(file_path)
+        file_name = file_name.lower()
+        file_extension = file_extension.lower()
+        print(file_extension)
+        print(file_name)
         if 'protein' in file_name or 'prot' in file_name:
             file_path_list[3] = file_path
         elif 'peptide' in file_name or 'pep' in file_name:
             file_path_list[2] = file_path
         elif 'psm' in file_name:
             file_path_list[1] = file_path
-        elif 'mzml' in file_path:
+        elif 'mzml' in file_extension:
             file_path_list[0] = file_path
         else:
             raise Exception(f"Function could not identify {file_name}. Please rename your file to contain the file type. Ex: .mzml, psm, peptide/pep, protein/prot")
+    
     return file_path_list
 def generate_bool_file_list(interpreted_file_list):
     bool_file_list = []
