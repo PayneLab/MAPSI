@@ -11,7 +11,7 @@ msfragger_peptide_file_path = "C:\\Users\\Sarah Curtis\\OneDrive - BYU\\Document
 msfragger_protein_file_path = "C:\\Users\\Sarah Curtis\\OneDrive - BYU\\Documents\\Single Cell Team Documents\\API_dev\\msfragger\\combined_protein.tsv"
 
 outfile = "C:\\Users\\Sarah Curtis\\OneDrive - BYU\\Documents\\Single Cell Team Documents\\API_dev\\MetaM\\2ng\\MMtester.tsv"
-
+parse_files(input_files="invalid")
 class TestParser(unittest.TestCase):
 
     # test loaders

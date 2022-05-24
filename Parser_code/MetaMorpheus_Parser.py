@@ -404,7 +404,7 @@ def check_user_inputs(input_files, output_file_path, columns_to_keep, multiIndex
         input_files = [input_files]
 
     # check output_file_path
-    if not isinstance(output_file_path, (str, Path)):
+    if output_file_path != None and not isinstance(output_file_path, (str, Path)):
         raise Exception("output_file_path must be a str or Path obj")
     
     # check inputted lists

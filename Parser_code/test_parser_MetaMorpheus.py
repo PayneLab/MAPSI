@@ -11,6 +11,8 @@ mm_psm_file_path = "C:\\Users\\Sarah Curtis\\OneDrive - BYU\\Documents\\Single C
 mm_peptideQ_file_path = "C:\\Users\\Sarah Curtis\\OneDrive - BYU\\Documents\\Single Cell Team Documents\\API_dev\\MetaM\\2ng\\AllQuantifiedPeptides.tsv"
 mm_protein_file_path = "C:\\Users\\Sarah Curtis\\OneDrive - BYU\\Documents\\Single Cell Team Documents\\API_dev\\MetaM\\2ng\\AllQuantifiedProteinGroups.tsv"
 outfile = "C:\\Users\\Sarah Curtis\\OneDrive - BYU\\Documents\\Single Cell Team Documents\\API_dev\\MetaM\\2ng\\MMtester.tsv"
+
+parse_files(input_files="invalid")
 class TestParser(unittest.TestCase):
 
     # test loaders
